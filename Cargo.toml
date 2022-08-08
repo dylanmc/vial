@@ -3,7 +3,7 @@ name = "vial"
 description = "a micro micro-framework"
 homepage = "https://vial.rs"
 repository = "https://github.com/xvxx/vial"
-version = "0.1.10-dev"
+version = "0.1.10-dyl"
 authors = ["chris west <c@xvxx.io>"]
 documentation = "https://docs.rs/vial/"
 edition = "2018"
@@ -19,7 +19,7 @@ exclude = [
 
 [package.metadata.release]
 consolidate-commits = true
-dev-version-ext = "dev"
+dev-version-ext = "dyl"
 pre-release-replacements = [
   {file="CHANGELOG.md", search="\\$Unreleased", replace="{{version}}"},
   {file="CHANGELOG.md", search="\\$ReleaseDate", replace="{{date}}"},
