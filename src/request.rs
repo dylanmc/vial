@@ -151,13 +151,22 @@ impl Request {
             req.parse_form();
         }
 
+        // Awkward fix for cookie bug (only did one cookie correctly?)
         #[cfg(feature = "cookies")]
         {
-            if let Some(cookie) = req.header("Cookie") {
-                let cookie = Cookie::parse(cookie).map_err(|e| Error::Other(e.to_string()))?;
-                let name = cookie.name().to_owned();
-                let val = util::percent_decode(cookie.value()).unwrap();
-                req.cookies.push((name, val));
+            let mut tv = vec![];
+            if let Some(cookies_str) = req.header("Cookie") {
+                for cookie in cookies_str.split("; ") {
+                    let key_val = cookie.split("=");
+                    let mut kvs = key_val.into_iter();
+                    if let Some(k) = kvs.next() { if let Some(v) = kvs.next() {
+                            tv.push((k.to_string(),v.to_string()));
+                        }
+                    }
+                }
+            }
+            for t in tv {
+                req.cookies.push(t);
             }
         }
 
