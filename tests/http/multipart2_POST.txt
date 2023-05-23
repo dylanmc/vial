@@ -1,0 +1,65 @@
+POST /upload HTTP/1.1
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:109.0) Gecko/20100101 Firefox/112.0
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8
+Accept-Language: en-US,en;q=0.5
+Accept-Encoding: gzip, deflate
+Content-Type: multipart/form-data; boundary=---------------------------63696236615513812933444437561
+Content-Length: 1143
+Connection: keep-alive
+
+-----------------------------63696236615513812933444437561
+Content-Disposition: form-data; name="filename1"; filename="move.rs"
+Content-Type: application/octet-stream
+
+// move_semantics6.rs
+// Execute `rustlings hint move_semantics6` or use the `hint` watch subcommand for a hint.
+// You can't change anything except adding or removing references.
+
+fn main() {
+    let data = "Rust is great!".to_string();
+
+    get_char(&data);
+
+    string_uppercase(&data);
+}
+
+// Should not take ownership
+fn get_char(data: &String) -> char {
+    data.chars().last().unwrap()
+}
+
+// Should take ownership
+fn string_uppercase(mut data: &String) {
+    data = &data.to_uppercase();
+
+    println!("{}", data);
+}
+
+-----------------------------63696236615513812933444437561
+Content-Disposition: form-data; name="filename2"; filename="borrow.rs"
+Content-Type: application/octet-stream
+
+fn test_borrow() {
+    let mut x:i32 = 32;
+    increment_var(&mut x);
+    increment_var(&mut x);
+    println!("{}", x);
+}
+
+fn increment_var(var: &mut i32) {
+    *var += 1;
+}
+
+fn main() {
+    test_borrow();
+}
+
+-----------------------------63696236615513812933444437561--
+< 2023/05/14 16:56:36.000027468  length=176 from=0 to=175
+HTTP/1.1 404 OK
+Server: ~ vial 0.1.10-dyl ~
+Date: Sun, 14 May 2023 23:56:36 GMT
+Connection: close
+content-length: 13
+content-type: text/html; charset=utf8
+

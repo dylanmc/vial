@@ -10,6 +10,9 @@ use {
     },
 };
 
+#[cfg(feature = "multipart")]
+use std::collections::VecDeque;
+
 #[cfg(feature = "cookies")]
 use cookie2::Cookie;
 
@@ -43,6 +46,13 @@ impl Span {
             "?"
         }
     }
+}
+
+/// Contains the parts of a multi-part request
+#[cfg(feature = "multipart")]
+#[derive(Debug)]
+pub struct Multipart {
+    parts: VecDeque<Span>,
 }
 
 /// Contains information about a single request.
@@ -532,5 +542,50 @@ impl Request {
     /// Get the value of something in the session store.
     pub fn session(&self, name: &str) -> Option<&str> {
         self.session_store.get(name)
+    }
+
+    #[cfg(feature = "multipart")]
+    /// parses a multipart request, returns the parts or None
+    pub fn parse_multipart(&self) -> Option<Multipart> {
+        let mut parts = VecDeque::new();
+        println!("parsing multipart message");
+
+        // let mut prefix_str = "--".to_owned();
+        let boundary_string = match self.header("boundary") {
+            None => { return None }
+            Some(str) => str.into_owned().into_bytes()
+        };
+        println!("multipart boundary {}", String::from_utf8(boundary_string.clone()).unwrap());
+
+        let mut ix = self.body.0;
+
+        // println!("req: {:?}", req);
+        'find_parts: loop {
+            let b_start = match util::find_subsequence(&self.buffer, &boundary_string, ix) {
+                None => break 'find_parts,
+                Some(eix) => eix + boundary_string.len()
+            };
+            println!("found multipart start {b_start}");
+            let b_end = match util::find_subsequence(&self.buffer, &boundary_string, b_start) {
+                None => break 'find_parts,
+                Some(eix) => eix - 1 
+            };
+            println!("found multipart end {b_end}");
+            parts.push_back(Span(b_start, b_end));
+            ix = b_end;
+        }
+
+        Some(Multipart {
+            parts: parts,
+        })
+    }
+}
+
+#[cfg(feature = "multipart")]
+impl Iterator for Multipart {
+    type Item = Span;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.parts.pop_front()
     }
 }

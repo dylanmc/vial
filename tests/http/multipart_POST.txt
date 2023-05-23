@@ -1,0 +1,28 @@
+POST /upload HTTP/1.1
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:109.0) Gecko/20100101 Firefox/112.0
+Content-Type: multipart/form-data; boundary=---------------------------60699960924810079512517829907
+Content-Length: 441
+DNT: 1
+Sec-GPC: 1
+
+-----------------------------60699960924810079512517829907
+Content-Disposition: form-data; name="file"; filename="borrow.rs"
+Content-Type: application/octet-stream
+
+fn test_borrow() {
+    let mut x:i32 = 32;
+    increment_var(&mut x);
+    increment_var(&mut x);
+    println!("{}", x);
+}
+
+fn increment_var(var: &mut i32) {
+    *var += 1;
+}
+
+fn main() {
+    test_borrow();
+}
+
+-----------------------------60699960924810079512517829907--
+

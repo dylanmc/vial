@@ -6,6 +6,9 @@ use vial::{
     Error, Request,
 };
 
+#[cfg(feature = "multipart")]
+use vial::request::Multipart;
+
 ////
 // helpers
 
@@ -91,6 +94,36 @@ fn parses_simple_POST() {
     assert_eq!("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.97 Safari/537.36", request.header("User-Agent").unwrap());
     assert_eq!(Some("Bobert"), request.form("name"));
     assert_eq!(Some("50-99"), request.form("age"));
+}
+
+#[test]
+#[cfg(feature = "multipart")]
+fn parses_multipart_POST() {
+    let fixture = fs::File::open("tests/http/multipart_POST.txt").unwrap();
+    let request = Request::from_reader(fixture).unwrap();
+    assert_eq!("---------------------------60699960924810079512517829907", request.header("boundary").unwrap());
+    let parts: Multipart = request.parse_multipart().unwrap();
+    let mut count = 0;
+    for p in parts {
+        count += 1;
+        println!("part: {:?}", p);
+    }
+    assert_eq!(count, 1);
+}
+
+#[test]
+#[cfg(feature = "multipart")]
+fn parses_multipart2_POST() {
+    let fixture = fs::File::open("tests/http/multipart2_POST.txt").unwrap();
+    let request = Request::from_reader(fixture).unwrap();
+    assert_eq!("---------------------------63696236615513812933444437561", request.header("boundary").unwrap());
+    let parts: Multipart = request.parse_multipart().unwrap();
+    let mut count = 0;
+    for p in parts {
+        count += 1;
+        println!("part: {:?}", p);
+    }
+    assert_eq!(count, 2);
 }
 
 #[test]

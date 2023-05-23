@@ -144,6 +144,14 @@ pub fn parse(mut buffer: Vec<u8>) -> Result<Status, Error> {
             if name.in_buf(&buffer).to_ascii_lowercase() == "content-length" {
                 content_length = value.in_buf(&buffer).parse().unwrap_or(0);
             }
+            if name.in_buf(&buffer).to_ascii_lowercase() == "content-type" {
+                let boundary_start = value.in_buf(&buffer).find("boundary=").unwrap_or(0);
+                if boundary_start > 0 {
+                    let boundary_value= Span(start+boundary_start+9, value.1);
+                    let boundary_key = Span(start + boundary_start, start + boundary_start + 8);
+                    headers.push((boundary_key, boundary_value));
+                }
+            }
 
             name = Span::new();
             parsing_key = true;

@@ -19,6 +19,14 @@ pub fn http_current_date() -> String {
     libc_strftime::strftime_gmt(HTTP_DATE_FMT, now) + " GMT"
 }
 
+/// Find a needle in a haystack, if it's there
+pub fn find_subsequence(haystack: &[u8], needle: &[u8], start: usize) -> Option<usize> {
+    match haystack[start..].windows(needle.len()).position(|window| window == needle) {
+        None => None,
+        Some (ix) => Some (ix + start)
+    }
+}
+
 /// Mutably borrowed from the zero dependency httpserv project.
 /// https://github.com/nic-hartley/httpserv/blob/585c020/src/http.rs
 pub fn percent_decode(mut inp: &str) -> Option<String> {

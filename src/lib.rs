@@ -207,7 +207,7 @@ mod cache;
 mod error;
 mod method;
 pub mod prelude;
-mod request;
+pub mod request;
 mod responder;
 mod response;
 mod router;
