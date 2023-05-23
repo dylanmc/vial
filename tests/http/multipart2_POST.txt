@@ -55,11 +55,3 @@ fn main() {
 }
 
 -----------------------------63696236615513812933444437561--
-< 2023/05/14 16:56:36.000027468  length=176 from=0 to=175
-HTTP/1.1 404 OK
-Server: ~ vial 0.1.10-dyl ~
-Date: Sun, 14 May 2023 23:56:36 GMT
-Connection: close
-content-length: 13
-content-type: text/html; charset=utf8
-

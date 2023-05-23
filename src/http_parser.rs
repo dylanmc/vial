@@ -144,6 +144,8 @@ pub fn parse(mut buffer: Vec<u8>) -> Result<Status, Error> {
             if name.in_buf(&buffer).to_ascii_lowercase() == "content-length" {
                 content_length = value.in_buf(&buffer).parse().unwrap_or(0);
             }
+            
+            #[cfg(feature = "multipart")]
             if name.in_buf(&buffer).to_ascii_lowercase() == "content-type" {
                 let boundary_start = value.in_buf(&buffer).find("boundary=").unwrap_or(0);
                 if boundary_start > 0 {

@@ -1,3 +1,12 @@
+//! Request describes the browser's messages to the server
+//! method is one of GET, POST, PUT, HEAD, PATCH, TRACE, DELETE,
+//!                  CONNECT, OPTIONS
+//! path is the stuff after the host
+//! key value fields:
+//!   headers describe the request, 
+//!   args are the parsed URL arguments
+//!   form is the PUT values
+//! body is the guts of what's being POSTed (or ___?)
 use {
     crate::{http_parser, util, Error, Result, TypeCache},
     std::{
@@ -52,9 +61,15 @@ impl Span {
 #[cfg(feature = "multipart")]
 #[derive(Debug)]
 pub struct Multipart {
-    parts: VecDeque<Span>,
+    pub parts: VecDeque<Part>,
 }
-
+#[cfg(feature = "multipart")]
+#[derive(Debug)]
+pub struct Part {
+    pub span: Span,
+    pub field_name: String,
+    pub file_name: String,
+}
 /// Contains information about a single request.
 pub struct Request {
     /// Remote address.
@@ -247,6 +262,11 @@ impl Request {
     /// Create a request from an arbitrary path. Used in testing.
     pub fn from_path(path: &str) -> Request {
         Request::default().with_path(path)
+    }
+
+    /// For extracting POST data
+    pub fn body_part(&self, span: & Span) -> &str {
+        span.in_buf(&self.buffer)
     }
 
     /// Give a request an arbitrary `path`. Can be used in tests or
@@ -548,14 +568,14 @@ impl Request {
     /// parses a multipart request, returns the parts or None
     pub fn parse_multipart(&self) -> Option<Multipart> {
         let mut parts = VecDeque::new();
-        println!("parsing multipart message");
+        // println!("parsing multipart message");
 
         // let mut prefix_str = "--".to_owned();
         let boundary_string = match self.header("boundary") {
             None => { return None }
             Some(str) => str.into_owned().into_bytes()
         };
-        println!("multipart boundary {}", String::from_utf8(boundary_string.clone()).unwrap());
+        // println!("multipart boundary {}", String::from_utf8(boundary_string.clone()).unwrap());
 
         let mut ix = self.body.0;
 
@@ -565,13 +585,41 @@ impl Request {
                 None => break 'find_parts,
                 Some(eix) => eix + boundary_string.len()
             };
-            println!("found multipart start {b_start}");
+            // println!("found multipart start {b_start}");
             let b_end = match util::find_subsequence(&self.buffer, &boundary_string, b_start) {
                 None => break 'find_parts,
-                Some(eix) => eix - 1 
+                Some(eix) => eix - 4
             };
-            println!("found multipart end {b_end}");
-            parts.push_back(Span(b_start, b_end));
+            // println!("found multipart end {b_end}");
+            let filename = match util::find_subsequence(&self.buffer, b"filename=", b_start) {
+                None => "no_name".to_string(),
+                Some(startix) => {
+                    if let Some(endix) = util::find_subsequence(&self.buffer, b"\"", startix + 10) {
+                        self.body_part(&Span(startix+10, endix)).to_owned()
+                    } else {
+                        "no close quote?".to_string()
+                    }
+                }
+            };
+            let inputname = match util::find_subsequence(&self.buffer, b" name=", b_start) {
+                None => "no field name".to_string(),
+                Some(startix) => {
+                    if let Some(endix) = util::find_subsequence(&self.buffer, b"\"", startix + 7) {
+                        self.body_part(&Span(startix+7, endix)).to_owned()
+                    } else {
+                        "no close quote?".to_string()
+                    }
+                }
+            };
+            // skip past the "part header"
+            let begin_payload = match util::find_subsequence(&self.buffer, b"\r\n\r\n", b_start) {
+                None => return None,
+                Some(end_headerix) => end_headerix + 4
+            };
+
+            parts.push_back(Part { span: Span(begin_payload, b_end),
+                                   file_name: filename,
+                                   field_name: inputname, } );
             ix = b_end;
         }
 
@@ -583,7 +631,7 @@ impl Request {
 
 #[cfg(feature = "multipart")]
 impl Iterator for Multipart {
-    type Item = Span;
+    type Item = Part;
 
     fn next(&mut self) -> Option<Self::Item> {
         self.parts.pop_front()

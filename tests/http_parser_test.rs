@@ -106,7 +106,8 @@ fn parses_multipart_POST() {
     let mut count = 0;
     for p in parts {
         count += 1;
-        println!("part: {:?}", p);
+        assert_eq!(request.body_part(&p.span).len(), 208);
+        // println!("part: {}:\n|{}|", p.file_name, request.body_part(&p.span));
     }
     assert_eq!(count, 1);
 }
@@ -114,6 +115,8 @@ fn parses_multipart_POST() {
 #[test]
 #[cfg(feature = "multipart")]
 fn parses_multipart2_POST() {
+    use vial::request;
+
     let fixture = fs::File::open("tests/http/multipart2_POST.txt").unwrap();
     let request = Request::from_reader(fixture).unwrap();
     assert_eq!("---------------------------63696236615513812933444437561", request.header("boundary").unwrap());
@@ -121,7 +124,14 @@ fn parses_multipart2_POST() {
     let mut count = 0;
     for p in parts {
         count += 1;
-        println!("part: {:?}", p);
+        // println!("part: {:?}", p); //request.body_part(&p.span));
+        if count == 1 {
+            assert_eq!(p.file_name, "move.rs");
+            assert_eq!(request.body_part(&p.span).len(), 523);
+        } else {
+            assert_eq!(p.file_name, "borrow.rs");
+            assert_eq!(request.body_part(&p.span).len(), 208);
+        }
     }
     assert_eq!(count, 2);
 }
